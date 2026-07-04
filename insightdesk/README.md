@@ -1,81 +1,106 @@
-# InsightDesk 🎫🤖
+# InsightDesk 🎫
 
-**AI-powered support ticket triage and root-cause analytics platform.**
+InsightDesk is a full-stack support ticket management and analytics platform with AI-assisted ticket classification.
 
-InsightDesk automatically classifies incoming support tickets — written in
-Arabic, English, or a mix of both — extracting category, priority, sentiment,
-and a likely root cause using an LLM, then surfaces the patterns on a live
-analytics dashboard. It's built to mirror how real support/operations teams
-triage and analyze recurring issues, but automates the manual first pass.
+The system allows users to create and manage support tickets, while an AI service analyzes each ticket and extracts useful information such as category, priority, sentiment, summary, and possible root cause. The results are shown in an analytics dashboard to help identify common issues and ticket patterns.
 
-## Why this project
+## Overview
 
-Manually triaging support tickets is repetitive and inconsistent — two agents
-often tag the same issue differently. InsightDesk uses an LLM to apply
-**consistent classification** across every ticket the moment it's submitted,
-and aggregates that data so a team can spot recurring root causes before they
-become a pattern of complaints.
+Support teams often receive many tickets that need to be reviewed, categorized, and prioritized manually. InsightDesk provides a simple workflow for submitting tickets and using AI to support the first step of ticket analysis.
+
+The project supports Arabic and English ticket content and includes authentication, ticket management, AI classification, and dashboard analytics.
 
 ## Features
 
-- 🔐 **JWT authentication** — register/login, tickets scoped per user
-- 🤖 **AI classification on submit** — category, priority, sentiment
-  (with a numeric score), likely root cause, and a one-line summary
-- 🌍 **Bilingual support** — tickets can be written in Arabic or English
-- 📊 **Analytics dashboard** — ticket volume by category/priority, sentiment
-  breakdown, and top recurring root causes
-- 🗂️ **Full CRUD** — create, list, view, and delete tickets
+- User registration and login using JWT authentication
+- Create, view, list, and delete support tickets
+- AI-assisted ticket classification
+- Arabic and English ticket support
+- Extracts category, priority, sentiment, summary, and possible root cause
+- Analytics dashboard for ticket categories, priorities, sentiment, and recurring root causes
+- User-specific ticket management
 
-## Tech stack
+## Tech Stack
 
-| Layer      | Technology                                      |
-|------------|--------------------------------------------------|
-| Frontend   | React 18, Vite, Tailwind CSS, Recharts, React Router |
-| Backend    | FastAPI, SQLAlchemy, Pydantic                    |
-| Database   | PostgreSQL                                       |
-| AI         | Anthropic Claude API (ticket classification)     |
-| Auth       | JWT (python-jose) + bcrypt password hashing       |
+| Layer | Technologies |
+|---|---|
+| Frontend | React, Vite, Tailwind CSS, Recharts, React Router |
+| Backend | FastAPI, SQLAlchemy, Pydantic |
+| Database | PostgreSQL |
+| AI | Anthropic Claude API |
+| Authentication | JWT, bcrypt password hashing |
 
 ## Architecture
 
-```
-┌─────────────┐      REST/JSON       ┌──────────────┐      SQL       ┌──────────────┐
-│   React SPA  │ ───────────────────▶ │  FastAPI     │ ─────────────▶ │  PostgreSQL   │
-│  (Vite +     │ ◀─────────────────── │  backend     │ ◀───────────── │              │
-│  Tailwind)   │                      │              │                └──────────────┘
-└─────────────┘                      └──────┬───────┘
-                                             │ classify_ticket()
-                                             ▼
-                                     ┌──────────────┐
-                                     │ Claude API   │
-                                     │ (Anthropic)  │
-                                     └──────────────┘
+```text
+React Frontend
+      |
+      | REST API
+      v
+FastAPI Backend
+      |
+      | SQLAlchemy
+      v
+PostgreSQL Database
+
+FastAPI also connects to Claude API for ticket classification.
 ```
 
-## Getting started
+## Project Structure
+
+```text
+insightdesk/
+├── backend/
+│   ├── app/
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── ai_service.py
+│   │   ├── auth_utils.py
+│   │   ├── database.py
+│   │   ├── main.py
+│   │   └── schemas.py
+│   └── requirements.txt
+└── frontend/
+    └── src/
+        ├── components/
+        ├── pages/
+        ├── api.js
+        └── App.jsx
+```
+
+## Getting Started
 
 ### Prerequisites
+
 - Python 3.10+
 - Node.js 18+
-- PostgreSQL running locally (or a connection string to a hosted instance)
-- An Anthropic API key ([console.anthropic.com](https://console.anthropic.com))
+- PostgreSQL
+- Anthropic API key
 
-### 1. Backend
+### Backend Setup
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate      # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements.txt
-
-cp .env.example .env          # then fill in DATABASE_URL, SECRET_KEY, ANTHROPIC_API_KEY
-
+cp .env.example .env
 uvicorn app.main:app --reload
 ```
 
-API docs available at `http://localhost:8000/docs`.
+For Windows:
 
-### 2. Frontend
+```bash
+venv\Scripts\activate
+```
+
+The API documentation will be available at:
+
+```text
+http://localhost:8000/docs
+```
+
+### Frontend Setup
 
 ```bash
 cd frontend
@@ -84,49 +109,33 @@ cp .env.example .env
 npm run dev
 ```
 
-App available at `http://localhost:5173`.
+The frontend will be available at:
 
-## API overview
-
-| Method | Endpoint                | Description                    |
-|--------|--------------------------|--------------------------------|
-| POST   | `/api/auth/register`     | Create a new user              |
-| POST   | `/api/auth/login`        | Get a JWT access token         |
-| POST   | `/api/tickets`           | Create a ticket (triggers AI)  |
-| GET    | `/api/tickets`           | List the current user's tickets|
-| GET    | `/api/tickets/{id}`      | Get one ticket + AI insights   |
-| DELETE | `/api/tickets/{id}`      | Delete a ticket                |
-| GET    | `/api/analytics/summary` | Aggregated dashboard stats     |
-
-## Project structure
-
-```
-insightdesk/
-├── backend/
-│   ├── app/
-│   │   ├── models/        # SQLAlchemy models
-│   │   ├── routers/       # auth, tickets, analytics endpoints
-│   │   ├── ai_service.py  # Claude classification logic
-│   │   ├── auth_utils.py  # JWT + password hashing
-│   │   ├── database.py
-│   │   ├── main.py
-│   │   └── schemas.py     # Pydantic request/response models
-│   └── requirements.txt
-└── frontend/
-    └── src/
-        ├── components/
-        ├── pages/          # Login, Register, Dashboard, Tickets, TicketDetail
-        ├── api.js
-        └── App.jsx
+```text
+http://localhost:5173
 ```
 
-## Possible extensions
+## API Overview
 
-- Role-based access (agent vs admin) with team-wide ticket visibility
-- Webhook ingestion from email/Slack to auto-create tickets
-- Fine-tuned classification with a labeled dataset instead of prompt-only
-- Real-time updates via WebSockets when ticket status changes
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/auth/register` | Create a new user |
+| POST | `/api/auth/login` | Login and receive a JWT token |
+| POST | `/api/tickets` | Create a new ticket |
+| GET | `/api/tickets` | List user tickets |
+| GET | `/api/tickets/{id}` | View ticket details |
+| DELETE | `/api/tickets/{id}` | Delete a ticket |
+| GET | `/api/analytics/summary` | Get dashboard analytics |
 
-## License
+## Future Improvements
 
-MIT
+- Add ticket status updates
+- Add admin and agent roles
+- Add team-level ticket visibility
+- Add file attachments for tickets
+- Add real-time dashboard updates
+- Improve AI classification using a labeled dataset
+
+## Purpose
+
+This project was built to practice full-stack development, backend API design, authentication, database integration, dashboard analytics, and AI-assisted text classification.
